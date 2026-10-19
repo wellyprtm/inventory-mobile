@@ -1,0 +1,64 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+Thumbs.db
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Android Studio / Gradle
+.gradle/
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/key.properties
+/android/local.properties
+/android/.gradle
+
+# iOS / CocoaPods
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Widget Preview related
+.widget_preview/
