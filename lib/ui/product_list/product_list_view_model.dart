@@ -22,6 +22,20 @@ class ProductListViewModel extends ChangeNotifier {
   String _selectedCategory = 'Semua';
   String get selectedCategory => _selectedCategory;
 
+  DataSourceMode _sourceMode = DataSourceMode.autoSync;
+  DataSourceMode get sourceMode => _sourceMode;
+
+  String get sourceModeLabel {
+    switch (_sourceMode) {
+      case DataSourceMode.autoSync:
+        return 'Auto Sync (API + SQLite)';
+      case DataSourceMode.apiOnly:
+        return 'Remote API Only';
+      case DataSourceMode.localSqlite:
+        return 'SQLite Database HP';
+    }
+  }
+
   Future<void> fetchProducts({bool showLoading = true}) async {
     if (showLoading) {
       _isLoading = true;
@@ -33,6 +47,7 @@ class ProductListViewModel extends ChangeNotifier {
       final result = await repository.getProducts(
         search: _search.trim().isEmpty ? null : _search.trim(),
         category: _selectedCategory == 'Semua' ? null : _selectedCategory,
+        mode: _sourceMode,
       );
       _products = result;
       _errorMessage = null;
@@ -53,6 +68,26 @@ class ProductListViewModel extends ChangeNotifier {
     if (_selectedCategory == category) return;
     _selectedCategory = category;
     fetchProducts(showLoading: true);
+  }
+
+  void onSourceModeChanged(DataSourceMode mode) {
+    if (_sourceMode == mode) return;
+    _sourceMode = mode;
+    fetchProducts(showLoading: true);
+  }
+
+  Future<void> syncData() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await repository.syncRemoteToLocal();
+      await fetchProducts(showLoading: false);
+    } catch (e) {
+      _errorMessage = 'Gagal sinkronisasi: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> addProduct(Product product) async {

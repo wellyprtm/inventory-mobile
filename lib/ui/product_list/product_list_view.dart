@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart';
 import '../../data/models/product.dart';
+import '../../data/repositories/product_repository.dart';
 import '../product_detail/product_detail_view.dart';
 import '../product_form/product_form_view.dart';
 import 'product_list_view_model.dart';
@@ -114,30 +115,108 @@ class _ProductListViewState extends State<ProductListView> {
           ],
         ),
         actions: [
-          ListenableBuilder(
-            listenable: widget.viewModel,
-            builder: (context, _) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16),
-                  child: Chip(
-                    label: Text(
-                      '${widget.viewModel.products.length} Item',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
+          // Tombol Pilih Sumber Data (API vs SQLite vs AutoSync)
+          PopupMenuButton<DataSourceMode>(
+            icon: const Icon(Icons.storage_rounded, color: Colors.indigo),
+            tooltip: 'Pilih Sumber Data (API / SQLite)',
+            onSelected: (mode) => widget.viewModel.onSourceModeChanged(mode),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: DataSourceMode.autoSync,
+                child: Row(
+                  children: [
+                    Icon(Icons.sync_alt, color: Colors.indigo),
+                    SizedBox(width: 10),
+                    Text('Auto Sync (API + SQLite)'),
+                  ],
                 ),
-              );
-            },
+              ),
+              const PopupMenuItem(
+                value: DataSourceMode.apiOnly,
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_outlined, color: Colors.blue),
+                    SizedBox(width: 10),
+                    Text('Fetch dari Remote API'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: DataSourceMode.localSqlite,
+                child: Row(
+                  children: [
+                    Icon(Icons.phone_android, color: Colors.teal),
+                    SizedBox(width: 10),
+                    Text('Fetch dari SQLite HP'),
+                  ],
+                ),
+              ),
+            ],
           ),
+          // Sinkronisasi Manual
+          IconButton(
+            icon: const Icon(Icons.sync),
+            tooltip: 'Sinkronisasi API ke SQLite HP',
+            onPressed: () => widget.viewModel.syncData(),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
+          // Banner Status Sumber Data
+          ListenableBuilder(
+            listenable: widget.viewModel,
+            builder: (context, _) {
+              final mode = widget.viewModel.sourceMode;
+              Color bg;
+              Color textCol;
+              IconData icon;
+
+              switch (mode) {
+                case DataSourceMode.autoSync:
+                  bg = Colors.indigo.shade50;
+                  textCol = Colors.indigo.shade800;
+                  icon = Icons.sync_alt;
+                  break;
+                case DataSourceMode.apiOnly:
+                  bg = Colors.blue.shade50;
+                  textCol = Colors.blue.shade800;
+                  icon = Icons.cloud_outlined;
+                  break;
+                case DataSourceMode.localSqlite:
+                  bg = Colors.teal.shade50;
+                  textCol = Colors.teal.shade800;
+                  icon = Icons.phone_android;
+                  break;
+              }
+
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                color: bg,
+                child: Row(
+                  children: [
+                    Icon(icon, size: 16, color: textCol),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Sumber Data: ${widget.viewModel.sourceModeLabel}',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textCol),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${widget.viewModel.products.length} Item',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textCol),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
           // Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               controller: _searchController,
               onChanged: widget.viewModel.onSearchChanged,
@@ -219,7 +298,7 @@ class _ProductListViewState extends State<ProductListView> {
                           Text(
                             vm.search.isNotEmpty || vm.selectedCategory != 'Semua'
                                 ? 'Tidak ada produk yang cocok'
-                                : 'Katalog masih kosong',
+                                : 'Database masih kosong',
                             style: TextStyle(color: Colors.grey.shade700, fontSize: 16),
                           ),
                           if (vm.search.isNotEmpty || vm.selectedCategory != 'Semua') ...[
